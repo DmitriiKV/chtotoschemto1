@@ -14,3 +14,4 @@ class News(SqlAlchemyBase):
     is_private = sa.Column(sa.Boolean, default=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"))
     user = orm.relationship('User')
+    categories = orm.relationship('Category', secondary='association', backref='news')
