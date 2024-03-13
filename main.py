@@ -1,7 +1,7 @@
-
-
-from flask import Flask, render_template, redirect, request, abort
+from flask import Flask, render_template, redirect, request, abort, make_response, jsonify
 from flask_login import LoginManager, current_user, login_required, logout_user
+
+import news_api
 from data import db_session
 from data.user import User
 from data.news import News
@@ -37,11 +37,13 @@ def login():
         return render_template('login.html', message='Nepravilnij login ili parol', form=form)
     return render_template('login.html', title='Avtorizacija', form=form)
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect('/')
+
 
 @app.route("/")
 def index():
@@ -92,6 +94,7 @@ def register():
         return redirect("/login")
     return render_template("register.html", title="Registration", form=form)
 
+
 @app.route("/news", methods=['GET', 'POST'])
 @login_required
 def add_news():
@@ -107,6 +110,7 @@ def add_news():
         db_sess.commit()
         return redirect('/')
     return render_template('news.html', title='Dobavlenije novosti', form=form)
+
 
 @app.route('/news/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -147,8 +151,10 @@ def news_delete(id):
         abort(404)
     return redirect('/')
 
+
 def main():
     db_session.global_init("db/blog_db.sqlite")
+    app.register_blueprint(news_api.blueprint)
     # # user = User()
     # # user.name = 'Gennadij'
     # # user.about = 'about Gennadij'
@@ -176,6 +182,16 @@ def main():
     # user.news.append(news)
     # db_sess.commit()
     app.run()
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not Found'}), 404)
+
+
+@app.errorhandler(400)
+def bad_request(error):
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
 if __name__ == '__main__':
